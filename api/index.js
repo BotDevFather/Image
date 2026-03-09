@@ -25,23 +25,28 @@ function renderText(name) {
   const safe = escapeXML(name);
 
   const svg = `
-  <svg width="400" height="80">
-  <style>
-  text{
-    font-family: Arial, sans-serif;
-    font-size: 34px;
-    fill: black;
-    font-weight: bold;
-  }
-  </style>
+<svg width="400" height="80">
+<style>
 
-  <rect width="100%" height="100%" fill="transparent"/>
+@font-face {
+  font-family: PublicSans;
+  src: url("./PublicSans-Black.ttf");
+}
 
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">
-  ${safe}
-  </text>
-  </svg>
-  `;
+text{
+  font-family: PublicSans;
+  font-size: 34px;
+  fill: black;
+}
+
+</style>
+
+<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">
+${name}
+</text>
+
+</svg>
+`;
 
   return Buffer.from(svg);
 }
