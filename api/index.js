@@ -8,8 +8,8 @@ const U1_TOP = 81;
 const U2_LEFT = 491;
 const U2_TOP = 86;
 
-const TXT_TOP1 = U1_TOP + SIZE + 16;
-const TXT_TOP2 = U2_TOP + SIZE + 14;
+const TXT_TOP1 = U1_TOP + SIZE + 25;
+const TXT_TOP2 = U2_TOP + SIZE + 20;
 
 const TEMPLATE =
 "https://raw.githubusercontent.com/BotDevFather/image/refs/heads/main/IMG_20260309_105850_752.jpg";
@@ -114,7 +114,7 @@ export default async function handler(req, res) {
       U1_LEFT - 80,
       TXT_TOP1,
       { text: u1.username, alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER },
-      400
+      360
     );
 
     template.print(
