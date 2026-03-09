@@ -203,4 +203,4 @@ export default async function handler(req, res) {
 
   }
 
-          } Convert in python we will use pillow and requirements txt
+          }
