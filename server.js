@@ -123,7 +123,7 @@ export default async function handler(req, res) {
         <style>
         @font-face {
           font-family: 'PublicSans';
-          src: url('https://raw.githubusercontent.com/BotDevFather/Image/main/PublicSans-Black.ttf');
+          src: url('https://raw.githubusercontent.com/BotDevFather/image/main/PublicSans-Black.ttf');
         }
 
         text {
@@ -149,7 +149,7 @@ export default async function handler(req, res) {
 
     // LOAD TEMPLATE
     const template = await fetch(
-      "https://raw.githubusercontent.com/BotDevFather/Image/main/template.jpg"
+      "https://raw.githubusercontent.com/BotDevFather/image/refs/heads/main/IMG_20260309_105850_752.jpg"
     );
 
     const templateBuffer = Buffer.from(await template.arrayBuffer());
