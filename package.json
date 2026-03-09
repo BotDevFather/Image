@@ -1,0 +1,9 @@
+{
+  "name": "telegram-love-image-api",
+  "version": "1.0.0",
+  "description": "Telegram avatar love image generator",
+  "type": "module",
+  "dependencies": {
+    "sharp": "^0.33.3"
+  }
+}
