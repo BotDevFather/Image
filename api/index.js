@@ -1,5 +1,4 @@
-import sharp from "sharp";
-import { createCanvas, registerFont } from "canvas";
+import Jimp from "jimp";
 
 const SIZE = 223;
 
@@ -14,11 +13,6 @@ const TXT_TOP2 = U2_TOP + SIZE + 14;
 
 const TEMPLATE =
 "https://raw.githubusercontent.com/BotDevFather/image/refs/heads/main/IMG_20260309_105850_752.jpg";
-
-/* OPTIONAL FONT */
-try {
-  registerFont("./PublicSans-Black.ttf", { family: "PublicSans" });
-} catch {}
 
 async function getUser(botToken, userId) {
 
@@ -39,15 +33,12 @@ async function getUser(botToken, userId) {
 
   const photoJson = await photos.json();
 
-  let photoBuffer;
+  let photoUrl;
 
   if (!photoJson.ok || !photoJson.result.photos.length) {
 
-    const fallback = await fetch(
-      "https://ui-avatars.com/api/?background=dbdbdb&size=223&name=U"
-    );
-
-    photoBuffer = Buffer.from(await fallback.arrayBuffer());
+    photoUrl =
+      "https://ui-avatars.com/api/?background=dbdbdb&size=223&name=U";
 
   } else {
 
@@ -59,50 +50,37 @@ async function getUser(botToken, userId) {
 
     const fileJson = await fileReq.json();
 
-    const img = await fetch(
-      `https://api.telegram.org/file/bot${botToken}/${fileJson.result.file_path}`
-    );
-
-    photoBuffer = Buffer.from(await img.arrayBuffer());
+    photoUrl =
+      `https://api.telegram.org/file/bot${botToken}/${fileJson.result.file_path}`;
 
   }
 
-  return { username, photo: photoBuffer };
+  const img = await Jimp.read(photoUrl);
+
+  img.resize(SIZE, SIZE);
+
+  return { username, photo: img };
 
 }
 
-async function processAvatar(buffer) {
+async function circleAvatar(img) {
 
-  const circleMask = Buffer.from(`
-  <svg width="${SIZE}" height="${SIZE}">
-  <circle cx="${SIZE/2}" cy="${SIZE/2}" r="${SIZE/2}" fill="white"/>
-  </svg>
-  `);
+  const mask = new Jimp(SIZE, SIZE, 0x00000000);
 
-  return sharp(buffer)
-    .resize(SIZE, SIZE, { fit: "cover" })
-    .composite([{ input: circleMask, blend: "dest-in" }])
-    .png()
-    .toBuffer();
+  mask.scan(0, 0, SIZE, SIZE, function (x, y) {
 
-}
+    const dx = x - SIZE / 2;
+    const dy = y - SIZE / 2;
 
-function renderText(text) {
+    if (dx * dx + dy * dy <= (SIZE / 2) * (SIZE / 2)) {
+      mask.setPixelColor(0xffffffff, x, y);
+    }
 
-  const canvas = createCanvas(400, 80);
-  const ctx = canvas.getContext("2d");
+  });
 
-  ctx.fillStyle = "rgba(0,0,0,0)";
-  ctx.fillRect(0,0,400,80);
+  img.mask(mask, 0, 0);
 
-  ctx.fillStyle = "black";
-  ctx.font = "bold 34px PublicSans, Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  ctx.fillText(text, 200, 40);
-
-  return canvas.toBuffer();
+  return img;
 
 }
 
@@ -116,38 +94,44 @@ export default async function handler(req, res) {
 
   try {
 
+    const template = await Jimp.read(TEMPLATE);
+
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+
     const [u1, u2] = await Promise.all([
       getUser(botToken, user1),
       getUser(botToken, user2)
     ]);
 
-    const [img1, img2] = await Promise.all([
-      processAvatar(u1.photo),
-      processAvatar(u2.photo)
-    ]);
+    const img1 = await circleAvatar(u1.photo);
+    const img2 = await circleAvatar(u2.photo);
 
-    const txt1 = renderText(u1.username);
-    const txt2 = renderText(u2.username);
+    template.composite(img1, U1_LEFT, U1_TOP);
+    template.composite(img2, U2_LEFT, U2_TOP);
 
-    const template = await fetch(TEMPLATE);
-    const templateBuffer = Buffer.from(await template.arrayBuffer());
+    template.print(
+      font,
+      U1_LEFT - 80,
+      TXT_TOP1,
+      { text: u1.username, alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER },
+      400
+    );
 
-    const finalImage = await sharp(templateBuffer)
-      .composite([
-        { input: img1, left: U1_LEFT, top: U1_TOP },
-        { input: img2, left: U2_LEFT, top: U2_TOP },
+    template.print(
+      font,
+      U2_LEFT - 80,
+      TXT_TOP2,
+      { text: u2.username, alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER },
+      400
+    );
 
-        { input: txt1, left: U1_LEFT - 90, top: TXT_TOP1 },
-        { input: txt2, left: U2_LEFT - 90, top: TXT_TOP2 }
-      ])
-      .png()
-      .toBuffer();
+    const buffer = await template.getBufferAsync(Jimp.MIME_PNG);
 
     const form = new FormData();
 
     form.append(
       "file",
-      new Blob([finalImage], { type: "image/png" }),
+      new Blob([buffer], { type: "image/png" }),
       "love.png"
     );
 
@@ -179,4 +163,4 @@ export default async function handler(req, res) {
 
   }
 
-      }
+                                                      }
